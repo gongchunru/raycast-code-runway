@@ -1,6 +1,6 @@
 # Code Runway
 
-一个强大的 Raycast 扩展，帮助开发者快速搜索、管理和启动开发项目，并深度集成 Warp 终端。
+一个强大的 Raycast 扩展，方便在 Warp 中搜索项目后，同时启动多个 Coding Cli， 方便快速开发（Vibe Coding）
 
 [中文文档](./README_CN.md) | [English](./README.md)
 
@@ -41,6 +41,8 @@
    - **简单启动**: 在单个 Warp 窗口中打开
    - **模板启动**: 从可用模板中选择
 
+![search-projects](./images/launch-templates.png)
+
 ### 3. 管理模板
 
 创建和自定义启动模板：
@@ -49,14 +51,8 @@
 2. 创建新模板或编辑现有模板
 3. 使用 **"设为默认"** 操作设置默认模板（`Cmd + D`）
 
-## 🎯 内置模板
+![manage-templates](./images/edit-template.png)
 
-扩展预配置了几个常用模板：
-
-- **默认模板**: 单个终端窗口
-- **前端开发**: 开发服务器 + 构建监听 + 测试
-- **全栈开发**: 前端 + 后端 + 数据库
-- **微服务**: 多个服务独立终端启动
 
 ## 🔍 项目识别
 
@@ -87,7 +83,8 @@
 | **搜索项目** | 搜索并启动你的开发项目 |
 | **项目目录设置** | 管理项目目录，提供完整控制 |
 | **Warp 启动模板** | 创建和管理自定义启动模板 |
-| **查看配置状态** | 检查当前配置和目录状态 |
+
+![available-commands](./images/settings.png)
 
 ## 🎨 模板自定义
 
@@ -105,20 +102,25 @@
 ### 示例：全栈模板
 
 ```yaml
-名称: 全栈开发
-描述: 前端 + 后端 + 数据库
-分屏方向: 竖向
+名称: 同时开启 Claude Code , Gemini Cli, Codex 和 Cursor
+描述: 同时开启 Claude Code , Gemini Cli, Codex 和 Cursor
+分屏方向: 横向
 命令:
-  - 标题: 前端
-    命令: npm run dev
-    工作目录: frontend
-  - 标题: 后端
-    命令: npm run dev
-    工作目录: backend
-  - 标题: 数据库
-    命令: docker-compose up -d && docker-compose logs -f
+  - 标题: Claude Code
+    命令: claude
+    工作目录: (项目根目录)
+  - 标题: Gemini Cli
+    命令: gemini
+    工作目录: (项目根目录)
+  - 标题: Codex
+    命令: codex
+    工作目录: (项目根目录)
+  - 标题: Cursor
+    命令: cursor .
     工作目录: (项目根目录)
 ```
+
+![custom-template](./images/add-template.png)
 
 ## 🛠️ Warp 集成
 
@@ -129,257 +131,7 @@
 - 自动设置正确的工作目录
 - 处理项目内的相对路径
 
-## 🐛 故障排除
 
-### Warp 未安装
 
-如果看到"Warp 未安装"错误：
 
-1. 下载并安装 [Warp Terminal](https://www.warp.dev/)
-2. 确保 Warp 安装在 `/Applications/Warp.app`
 
-### 找不到项目
-
-如果项目未被检测到：
-
-1. **检查文件权限**: 确保扩展可以读取目录
-2. **验证项目标记**: 确认项目包含可检测的文件
-3. **测试简单项目**: 创建一个包含 `package.json` 的测试目录
-4. **使用诊断工具**: 在项目操作菜单中可用
-5. 使用 `Cmd + R` 刷新项目列表
-
-### 启动失败
-
-如果项目启动失败：
-
-1. **检查工作目录**: 确保相对路径存在
-2. **手动测试命令**: 先在终端中运行命令
-3. **使用简单命令**: 从基本命令如 `echo` 或 `ls` 开始
-4. **检查 Warp 配置**: 查看 `~/.warp/launch_configurations/`
-
-### Warp 集成问题
-
-常见的 Warp 集成问题：
-
-1. **配置文件创建**: 检查是否在 `~/.warp/launch_configurations/` 中创建了文件
-2. **URI 方案处理**: 确保 Warp 设为 `warp://` URLs 的默认处理程序
-3. **手动备选方案**: 如果自动启动失败，手动打开 Warp 并使用 `Cmd+P` 查找配置
-
-### 模板调试
-
-如果模板未按预期工作：
-
-1. **检查工作目录**: 确保相对路径存在
-2. **手动测试命令**: 先在终端中运行命令
-3. **使用简单命令**: 从基本命令如 `echo` 或 `ls` 开始
-4. **检查 Warp 配置**: 查看 `~/.warp/launch_configurations/`
-
-## 🎯 高级模板模式
-
-### 多环境开发
-
-适用于有多个环境（开发、测试、生产）的项目：
-
-```yaml
-名称: 多环境开发
-描述: 开发 + 测试 + 生产监控
-命令:
-  - 标题: 本地开发
-    命令: npm run dev
-    工作目录: .
-  - 标题: 测试部署
-    命令: npm run deploy:staging && npm run logs:staging
-    工作目录: .
-  - 标题: 生产监控
-    命令: npm run logs:prod
-    工作目录: .
-```
-
-### Docker Compose 项目
-
-适用于复杂的 Docker 设置：
-
-```yaml
-名称: Docker 全栈
-描述: 完整的 Docker 环境与日志
-命令:
-  - 标题: 启动服务
-    命令: docker-compose up -d
-    工作目录: .
-  - 标题: 应用日志
-    命令: docker-compose logs -f app
-    工作目录: .
-  - 标题: 数据库日志
-    命令: docker-compose logs -f db
-    工作目录: .
-  - 标题: Redis 日志
-    命令: docker-compose logs -f redis
-    工作目录: .
-```
-
-### Monorepo 管理
-
-适用于包含多个包的大型单仓库：
-
-```yaml
-名称: Monorepo 开发
-描述: 单仓库中的多个包
-命令:
-  - 标题: 根目录构建监听
-    命令: npm run build:watch
-    工作目录: .
-  - 标题: 包 A
-    命令: npm run dev
-    工作目录: packages/package-a
-  - 标题: 包 B
-    命令: npm run dev
-    工作目录: packages/package-b
-  - 标题: 集成测试
-    命令: npm run test:integration
-    工作目录: .
-```
-
-## 📁 目录组织技巧
-
-### 项目分组
-
-使用名称前缀按类别组织项目：
-
-- **工作项目**: 使用前缀 "Work-"（如 "Work-ClientApp"）
-- **个人项目**: 使用前缀 "Personal-" 
-- **学习项目**: 使用前缀 "Learn-"
-- **开源项目**: 使用前缀 "OSS-"
-
-### 层次结构
-
-组织你的项目目录：
-
-```
-~/Development/
-├── work/
-│   ├── client-projects/
-│   └── internal-tools/
-├── personal/
-│   ├── side-projects/
-│   └── experiments/
-└── learning/
-    ├── tutorials/
-    └── courses/
-```
-
-将每个类别添加为单独的目录，使用适当的前缀。
-
-## ⚡ 性能优化
-
-### 大目录处理
-
-对于包含许多项目的目录：
-
-1. **禁用未使用的目录**: 使用启用/禁用切换来排除不常用的目录
-2. **拆分大目录**: 将一个大目录拆分为逻辑子目录
-3. **定期清理**: 从扫描目录中移除过时的项目
-
-### 模板效率
-
-- **最小化命令**: 模板中只包含必要的命令
-- **使用相对路径**: 优先使用相对工作目录而非绝对路径
-- **分组相关命令**: 将相关服务放在同一个模板中
-
-## 🔍 项目发现模式
-
-### 自定义项目标记
-
-如果你的项目不遵循标准模式，可以创建标记文件：
-
-```bash
-# 在自定义项目目录中创建 .project 文件
-touch my-custom-project/.project
-```
-
-虽然不会自动检测，但这有助于你视觉上识别项目。
-
-### 嵌套项目处理
-
-对于项目中的项目（如 monorepos），扫描器会检测：
-
-- 首先是根级项目
-- 如果子目录有自己的项目文件，则作为子目录项目
-- Git 子模块作为独立项目
-
-## 🎨 图标自定义模式
-
-扩展根据项目名称自动分配图标。要影响图标选择：
-
-- 在项目文件夹中包含技术名称：`my-react-app`、`golang-api`
-- 使用描述性名称：`mobile-ios-app`、`desktop-electron`
-- 按类型组织：`api-service`、`web-frontend`
-
-## 🚀 工作流程优化
-
-### 日常开发例程
-
-1. **晨间设置**: 使用默认模板快速启动主要项目
-2. **上下文切换**: 在不同类型的工作之间切换时使用特定模板
-3. **结束一天**: 使用简单启动快速检查项目状态
-
-### 团队协作
-
-- **共享模板**: 导出模板配置与团队成员共享
-- **标准化命名**: 使用一致的项目命名约定
-- **文档模式**: 为项目结构创建团队指南
-
-### 与其他工具集成
-
-Code Runway 与以下工具配合良好：
-
-- **IDE 集成**: 与 VS Code 或其他 IDE 一起使用
-- **版本控制**: Git 钩子可以触发项目重新扫描
-- **CI/CD 管道**: 模板可以包含部署监控
-- **任务运行器**: 与 npm scripts、Make 或其他构建工具集成
-
-## 📊 监控和维护
-
-### 定期维护任务
-
-- **清理旧配置**: 移除未使用的 Warp 配置
-- **更新模板**: 随着工作流程演变调整模板
-- **审查目录结构**: 根据需要重组项目
-- **性能检查**: 监控大目录的扫描时间
-
-### 健康检查
-
-定期验证：
-
-- 所有配置的目录仍可访问
-- 项目检测正常工作
-- 模板成功启动
-- Warp 集成正常运行
-
-## 💻 开发
-
-使用 TypeScript 和 Raycast API 构建。
-
-```bash
-# 开发模式
-npm run dev
-
-# 生产构建
-npm run build
-
-# 代码检查和修复
-npm run fix-lint
-
-# 发布到 Raycast Store
-npm run publish
-```
-
-## 📄 许可证
-
-MIT 许可证 - 详见 LICENSE 文件。
-
----
-
-<div align="center">
-  <p>用 ❤️ 为热爱高效工作流的开发者打造</p>
-  <p>⭐ 如果觉得有用请给个星！</p>
-</div>
