@@ -260,7 +260,7 @@ function AddDirectoryForm({ onAdded }: AddDirectoryFormProps) {
         showToast({
           style: Toast.Style.Success,
           title: "Successfully Added",
-          message: `Added ${addedCount} director(y|ies), found ${totalProjects} projects`,
+          message: `Added ${addedCount} directories, found ${totalProjects} projects`,
         });
       } else {
         showToast({
@@ -321,7 +321,7 @@ function AddDirectoryForm({ onAdded }: AddDirectoryFormProps) {
         info="When enabled, all levels of subdirectories will be scanned, which may increase scan time."
       />
 
-      <Form.Description text={`Selected ${selectedPaths.length} director(y|ies)`} />
+      <Form.Description text={`Selected ${selectedPaths.length} directories`} />
 
       {selectedPaths.length > 0 && (
         <Form.Description text={`Directory list:\n${selectedPaths.map((p) => `• ${p}`).join("\n")}`} />
