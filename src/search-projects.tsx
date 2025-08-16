@@ -1,6 +1,6 @@
 import { ActionPanel, Action, List, showToast, Toast, Icon, showHUD } from "@raycast/api";
 import { useState, useEffect } from "react";
-import { Project, WarpTemplate, ProjectDirectory } from "./types";
+import { Project, WarpTemplate } from "./types";
 import { scanAllProjects, searchProjects } from "./utils/projectScanner";
 import { ProjectDirectoryStorage, ProjectTemplateStorage } from "./utils/storage";
 import { launchWarpConfig, launchProjectSimple, checkWarpInstalled, debugWarpEnvironment } from "./utils/warpLauncher";

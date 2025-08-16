@@ -130,7 +130,11 @@ export default function ManageTemplates() {
           description="Create a template to quickly launch your project development environment."
           actions={
             <ActionPanel>
-              <Action.Push title="Create New Template" target={<EditTemplateForm onSaved={loadTemplates} />} icon={Icon.Plus} />
+              <Action.Push
+                title="Create New Template"
+                target={<EditTemplateForm onSaved={loadTemplates} />}
+                icon={Icon.Plus}
+              />
             </ActionPanel>
           }
         />
@@ -267,7 +271,13 @@ function EditTemplateForm({ template, onSaved }: EditTemplateFormProps) {
         </ActionPanel>
       }
     >
-      <Form.TextField id="name" title="Template Name" placeholder="Frontend Development" value={name} onChange={setName} />
+      <Form.TextField
+        id="name"
+        title="Template Name"
+        placeholder="Frontend Development"
+        value={name}
+        onChange={setName}
+      />
 
       <Form.TextArea
         id="description"
@@ -312,7 +322,7 @@ function EditTemplateForm({ template, onSaved }: EditTemplateFormProps) {
 
       <Form.Description text="Configure terminal commands (at least one is required)" />
 
-      {commands.map((command, index) => (
+      {commands.map((command) => (
         <Fragment key={command.id}>
           <Form.TextField
             id={`title-${index}`}
@@ -373,22 +383,28 @@ function TemplateDetails({ template }: TemplateDetailsProps) {
             template.launchMode === "split-panes"
               ? "Split Panes"
               : template.launchMode === "multi-tab"
-              ? "Multiple Tabs"
-              : "Multiple Windows"
+                ? "Multiple Tabs"
+                : "Multiple Windows"
           }
           icon={
             template.launchMode === "split-panes"
               ? Icon.AppWindowSidebarLeft
               : template.launchMode === "multi-tab"
-              ? Icon.AppWindowList
-              : Icon.Window
+                ? Icon.AppWindowList
+                : Icon.Window
           }
         />
-        {template.isDefault && <List.Item title="Default Template" subtitle="This is the default Warp launch configuration" icon={Icon.Star} />}
+        {template.isDefault && (
+          <List.Item
+            title="Default Template"
+            subtitle="This is the default Warp launch configuration"
+            icon={Icon.Star}
+          />
+        )}
       </List.Section>
 
       <List.Section title="Command List">
-        {template.commands.map((command, index) => (
+        {template.commands.map((command) => (
           <List.Item
             key={command.id}
             title={command.title}

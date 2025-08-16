@@ -1,6 +1,6 @@
 import { ActionPanel, Action, List, showToast, Toast, Icon, Color, Form, useNavigation, showHUD } from "@raycast/api";
 import { useState, useEffect } from "react";
-import { ProjectDirectory, DisplayProjectDirectory } from "./types";
+import { DisplayProjectDirectory } from "./types";
 import { ProjectDirectoryStorage } from "./utils/storage";
 import { scanProjectsInDirectory } from "./utils/projectScanner";
 
@@ -130,7 +130,11 @@ export default function DirectorySettings() {
           description="Add a project directory to start scanning for projects"
           actions={
             <ActionPanel>
-              <Action.Push title="Add Directory" target={<AddDirectoryForm onAdded={loadDirectories} />} icon={Icon.Plus} />
+              <Action.Push
+                title="Add Directory"
+                target={<AddDirectoryForm onAdded={loadDirectories} />}
+                icon={Icon.Plus}
+              />
             </ActionPanel>
           }
         />
@@ -155,7 +159,7 @@ export default function DirectorySettings() {
           </List.Section>
 
           <List.Section title={`Configured Directories (${directories.length})`}>
-            {directories.map((directory, index) => (
+            {directories.map((directory) => (
               <List.Item
                 key={directory.path}
                 title={directory.name}

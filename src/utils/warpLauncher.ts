@@ -285,7 +285,7 @@ export async function debugWarpEnvironment(): Promise<void> {
 
   // 2. 检查Warp应用是否安装
   try {
-    const result = await execAsync("ls -la /Applications/Warp.app");
+    await execAsync("ls -la /Applications/Warp.app");
     console.log("✅ Warp.app 已安装");
   } catch {
     console.log("❌ Warp.app 未在 /Applications 目录中找到");
@@ -295,7 +295,7 @@ export async function debugWarpEnvironment(): Promise<void> {
   const configDir = getWarpConfigDir();
   try {
     const fs = await import("fs/promises");
-    const stats = await fs.stat(configDir);
+    await fs.stat(configDir);
     console.log(`✅ 配置目录存在: ${configDir}`);
 
     // 列出现有配置文件
