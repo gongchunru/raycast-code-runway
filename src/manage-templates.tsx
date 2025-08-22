@@ -74,8 +74,8 @@ export default function ManageTemplates() {
   }
 
   return (
-    <List 
-      isLoading={isLoading} 
+    <List
+      isLoading={isLoading}
       navigationTitle="Manage Warp Launch Configurations"
       actions={
         <ActionPanel>
