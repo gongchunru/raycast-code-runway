@@ -5,7 +5,11 @@ import { WarpTemplate, TerminalCommand } from "./types";
 import { ProjectTemplateStorage } from "./utils/storage";
 
 export default function ManageTemplates() {
-  const { isLoading, data: templates = [], revalidate } = useCachedPromise(
+  const {
+    isLoading,
+    data: templates = [],
+    revalidate,
+  } = useCachedPromise(
     async () => {
       return await ProjectTemplateStorage.getTemplates();
     },
@@ -14,7 +18,7 @@ export default function ManageTemplates() {
       failureToastOptions: {
         title: "Failed to load templates",
       },
-    }
+    },
   );
 
   async function deleteTemplate(id: string) {
