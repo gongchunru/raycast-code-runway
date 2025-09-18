@@ -324,7 +324,9 @@ export default function SearchProjects() {
                         const files = await fs.readdir(warpConfigDir);
 
                         // Only remove extension-generated configs with our safe prefix
-                        const projectConfigs = files.filter((file) => file.startsWith(FILE_PREFIX) && file.endsWith(".yaml"));
+                        const projectConfigs = files.filter(
+                          (file) => file.startsWith(FILE_PREFIX) && file.endsWith(".yaml"),
+                        );
 
                         for (const file of projectConfigs) {
                           const filePath = path.join(warpConfigDir, file);

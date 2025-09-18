@@ -92,7 +92,9 @@ async function cleanOldConfigFiles(configName: string): Promise<void> {
     const files = await fs.readdir(warpConfigDir);
 
     // 找到所有匹配的旧配置文件
-    const oldConfigFiles = files.filter((file) => file.startsWith(`${FILE_PREFIX}${safeFileName}`) && file.endsWith(".yaml"));
+    const oldConfigFiles = files.filter(
+      (file) => file.startsWith(`${FILE_PREFIX}${safeFileName}`) && file.endsWith(".yaml"),
+    );
 
     if (oldConfigFiles.length > 0) {
       if (DEBUG) console.log(`Found ${oldConfigFiles.length} old config files to remove:`, oldConfigFiles);

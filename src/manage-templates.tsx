@@ -1,4 +1,16 @@
-import { ActionPanel, Action, List, showToast, Toast, Icon, Form, useNavigation, showHUD, Color, environment } from "@raycast/api";
+import {
+  ActionPanel,
+  Action,
+  List,
+  showToast,
+  Toast,
+  Icon,
+  Form,
+  useNavigation,
+  showHUD,
+  Color,
+  environment,
+} from "@raycast/api";
 import { useState, Fragment } from "react";
 import { useCachedPromise } from "@raycast/utils";
 import { WarpTemplate, TerminalCommand } from "./types";
