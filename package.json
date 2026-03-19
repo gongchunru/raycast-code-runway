@@ -6,6 +6,20 @@
   "icon": "extension-icon.png",
   "author": "gongchr",
   "license": "MIT",
+  "preferences": [
+    {
+      "name": "enterAction",
+      "type": "dropdown",
+      "title": "Enter Key Action",
+      "description": "Choose what happens when you press Enter on a project",
+      "required": false,
+      "default": "default-template",
+      "data": [
+        { "title": "Launch with Default Template", "value": "default-template" },
+        { "title": "Choose Launch Action", "value": "choose-template" }
+      ]
+    }
+  ],
   "commands": [
     {
       "name": "search-projects",

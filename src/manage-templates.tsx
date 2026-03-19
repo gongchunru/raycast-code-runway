@@ -27,17 +27,7 @@ function getTemplateTargetLabel(template: WarpTemplate): string {
 function getTemplateIcon(template: WarpTemplate): string | Icon | { fileIcon: string } {
   if (template.isDefault) return Icon.Star;
   if (template.launcherKind === "editor") return getEditorIcon(template.editorType);
-
-  const name = template.name.toLowerCase();
-  if (name.includes("frontend") || name.includes("react") || name.includes("vue")) return Icon.Globe;
-  if (name.includes("backend") || name.includes("api") || name.includes("server")) return Icon.Network;
-  if (name.includes("fullstack")) return Icon.AppWindowSidebarLeft;
-  if (name.includes("microservice")) return Icon.AppWindowGrid3x3;
-  if (name.includes("database") || name.includes("db")) return Icon.HardDrive;
-  if (name.includes("mobile") || name.includes("app")) return Icon.Mobile;
-  if (name.includes("desktop") || name.includes("electron")) return Icon.Desktop;
-  if (name.includes("test")) return Icon.CheckCircle;
-  if (name.includes("deploy") || name.includes("docker")) return Icon.Rocket;
+  if (template.launcherKind === "terminal") return getTerminalIcon(template.terminalType);
 
   return Icon.Terminal;
 }
@@ -255,14 +245,14 @@ function EditTemplateForm({ template, onSaved }: EditTemplateFormProps) {
   const availableEditors = getAvailableEditors(editorType);
   const launchModeOptions = isGhostty
     ? [
-        { value: "split-panes", title: "Current Tab", icon: Icon.AppWindowSidebarLeft },
-        { value: "multi-tab", title: "New Tab", icon: Icon.AppWindowList },
-        { value: "multi-window", title: "New Window", icon: Icon.Window },
+        { value: "split-panes", title: "Current Tab", icon: "split-left-right.svg" },
+        { value: "multi-tab", title: "New Tab", icon: "launch-multi-tab.svg" },
+        { value: "multi-window", title: "New Window", icon: "launch-multi-window.svg" },
       ]
     : [
-        { value: "split-panes", title: "Split Panes", icon: Icon.AppWindowSidebarLeft },
-        { value: "multi-tab", title: "Multiple Tabs", icon: Icon.AppWindowList },
-        { value: "multi-window", title: "Multiple Windows", icon: Icon.Window },
+        { value: "split-panes", title: "Split Panes", icon: "split-left-right.svg" },
+        { value: "multi-tab", title: "Multiple Tabs", icon: "launch-multi-tab.svg" },
+        { value: "multi-window", title: "Multiple Windows", icon: "launch-multi-window.svg" },
       ];
   const launchModeInfo = isWarp
     ? "Warp supports panes, tabs, and windows natively"

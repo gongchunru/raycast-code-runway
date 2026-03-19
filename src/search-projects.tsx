@@ -1,4 +1,4 @@
-import { ActionPanel, Action, List, showToast, Toast, Icon, showHUD, environment } from "@raycast/api";
+import { ActionPanel, Action, List, showToast, Toast, Icon, showHUD, environment, getPreferenceValues } from "@raycast/api";
 import { useState, useEffect } from "react";
 import { useCachedPromise } from "@raycast/utils";
 import { Project, WarpTemplate } from "./types";
@@ -308,31 +308,63 @@ export default function SearchProjects() {
             ]}
             actions={
               <ActionPanel>
-                <ActionPanel.Section title="Launch">
-                  <Action.Push
-                    title="Choose Launch Action"
-                    icon={Icon.List}
-                    target={
-                      <LaunchOptionsView
-                        project={project}
-                        defaultTemplate={defaultTemplate}
-                        templates={warpTemplates}
-                        onLaunch={launchProject}
+                {getPreferenceValues<{ enterAction?: string }>().enterAction !== "choose-template" ? (
+                  <>
+                    <ActionPanel.Section title="Quick Launch">
+                      {defaultTemplate ? (
+                        <Action
+                          title={`Default Template (${defaultTemplate.name})`}
+                          icon={Icon.Star}
+                          onAction={() => launchProject(project, defaultTemplate)}
+                        />
+                      ) : (
+                        <Action title="Simple Launch" icon={Icon.Terminal} onAction={() => launchProject(project)} />
+                      )}
+                    </ActionPanel.Section>
+                    <ActionPanel.Section title="Launch">
+                      <Action.Push
+                        title="Choose Launch Action"
+                        icon={Icon.List}
+                        target={
+                          <LaunchOptionsView
+                            project={project}
+                            defaultTemplate={defaultTemplate}
+                            templates={warpTemplates}
+                            onLaunch={launchProject}
+                          />
+                        }
                       />
-                    }
-                  />
-                </ActionPanel.Section>
-                <ActionPanel.Section title="Quick Launch">
-                  {defaultTemplate ? (
-                    <Action
-                      title={`Default Template (${defaultTemplate.name})`}
-                      icon={Icon.Star}
-                      onAction={() => launchProject(project, defaultTemplate)}
-                    />
-                  ) : (
-                    <Action title="Simple Launch" icon={Icon.Terminal} onAction={() => launchProject(project)} />
-                  )}
-                </ActionPanel.Section>
+                    </ActionPanel.Section>
+                  </>
+                ) : (
+                  <>
+                    <ActionPanel.Section title="Launch">
+                      <Action.Push
+                        title="Choose Launch Action"
+                        icon={Icon.List}
+                        target={
+                          <LaunchOptionsView
+                            project={project}
+                            defaultTemplate={defaultTemplate}
+                            templates={warpTemplates}
+                            onLaunch={launchProject}
+                          />
+                        }
+                      />
+                    </ActionPanel.Section>
+                    <ActionPanel.Section title="Quick Launch">
+                      {defaultTemplate ? (
+                        <Action
+                          title={`Default Template (${defaultTemplate.name})`}
+                          icon={Icon.Star}
+                          onAction={() => launchProject(project, defaultTemplate)}
+                        />
+                      ) : (
+                        <Action title="Simple Launch" icon={Icon.Terminal} onAction={() => launchProject(project)} />
+                      )}
+                    </ActionPanel.Section>
+                  </>
+                )}
 
                 <ActionPanel.Section title="Templates">
                   {warpTemplates.map((template) => (
@@ -352,11 +384,7 @@ export default function SearchProjects() {
                           ? Icon.Star
                           : template.launcherKind === "editor"
                             ? getEditorIcon(template.editorType)
-                            : template.terminalType === "warp"
-                              ? Icon.Terminal
-                              : template.terminalType === "iterm"
-                                ? Icon.Terminal
-                                : Icon.CommandSymbol
+                            : getTerminalIcon(template.terminalType)
                       }
                       onAction={() => launchProject(project, template)}
                     />
