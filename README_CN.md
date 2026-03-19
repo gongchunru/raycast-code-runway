@@ -1,23 +1,27 @@
 # Code Runway
 
-一个强大的 Raycast 扩展，方便在 Warp 中搜索项目后，同时启动多个 Coding Cli， 方便快速开发（Vibe Coding）
+一个强大的 Raycast 扩展，快速搜索项目并在终端或编辑器中启动，支持多终端分屏、多标签页等布局，方便 Vibe Coding。
 
-[中文文档](./README_CN.md) | [English](./README.md)
+[中文文档](https://github.com/gongchunru/raycast-code-runway/blob/main/README_CN.md) | [English](https://github.com/gongchunru/raycast-code-runway/blob/main/README.md)
 
 ## ✨ 功能特性
 
 - 🔍 **智能项目发现**: 自动扫描和索引配置目录中的所有项目
-- 🚀 **快速启动**: 一键启动项目，支持自定义 Warp 终端配置
-- 🎯 **项目模板**: 为不同开发场景预定义启动模板
+- 🚀 **快速启动**: 一键启动项目，支持自定义模板配置
+- 🖥️ **多终端支持**: 支持 **Warp**、**Ghostty** 和 **iTerm**
+- ✏️ **编辑器集成**: 支持 **Cursor**、**Windsurf**、**VS Code** 等编辑器直接打开项目
+- 🎯 **启动模板**: 为不同开发场景预定义启动模板
 - ⭐ **默认模板**: 将常用模板设为默认，实现超快速启动
+- ⚙️ **可配置回车行为**: 可选择回车直接启动默认模板，或显示模板选择列表
 - 🛠️ **自定义命令**: 配置多个终端命令，支持自定义工作目录
 - 📁 **目录管理**: 简单易用的项目目录管理，支持启用/禁用控制
-- 🎨 **智能图标**: 根据项目类型自动分配合适的图标
 
 ## 📋 系统要求
 
-- [Raycast](https://raycast.com/) - 必需
-- [Warp Terminal](https://www.warp.dev/) - 终端启动功能必需
+- [Raycast](https://raycast.com/) — 必需
+- 至少一个支持的终端或编辑器：
+  - **终端**: [Warp](https://www.warp.dev/)、[Ghostty](https://ghostty.org/)、[iTerm](https://iterm2.com/)
+  - **编辑器**: [Cursor](https://cursor.sh/)、[Windsurf](https://codeium.com/windsurf)、[VS Code](https://code.visualstudio.com/) 等
 
 ## 🚀 快速开始
 
@@ -25,8 +29,8 @@
 
 首先，添加你的项目根目录：
 
-1. 打开 Raycast 搜索 **"项目目录设置"**
-2. 点击 **"添加新目录"** 或按 `Cmd + N`
+1. 打开 Raycast 搜索 **"Project Directory Settings"**
+2. 点击 **"Add New Directory"** 或按 `Cmd + N`
 3. 选择你的项目根目录（支持多选）
 4. 可选：添加显示名称前缀来组织目录
 
@@ -34,24 +38,25 @@
 
 ### 2. 搜索和启动项目
 
-1. 打开 Raycast 搜索 **"搜索项目"**
+1. 打开 Raycast 搜索 **"Search Projects"**
 2. 输入关键词搜索项目
-3. 选择项目并选择启动方式：
-   - **默认模板**: 使用你设置的默认模板快速启动
-   - **简单启动**: 在单个 Warp 窗口中打开
-   - **模板启动**: 从可用模板中选择
+3. 按 `Enter` 启动：
+   - 默认直接使用 **默认模板** 启动
+   - 也可以在扩展设置中配置为打开 **模板选择列表**
 
-![search-projects](./metadata/code-runway-2.png)
+![search-projects](metadata/code-runway-2.png)
 
 ### 3. 管理模板
 
 创建和自定义启动模板：
 
-1. 搜索 **"Warp 启动模板"**
+1. 搜索 **"Launch Templates"**
 2. 创建新模板或编辑现有模板
-3. 使用 **"设为默认"** 操作设置默认模板（`Cmd + D`）
+3. 选择终端（Warp、Ghostty、iTerm）或编辑器（Cursor、Windsurf 等）
+4. 配置分屏方向、启动模式和命令
+5. 使用 **"Set as Default"** 操作设置默认模板（`Cmd + D`）
 
-![manage-templates](./metadata/code-runway-4.png)
+![manage-templates](metadata/code-runway-4.png)
 
 ## 🔍 项目识别
 
@@ -70,60 +75,63 @@
 
 ## ⌨️ 快捷键
 
+- `Enter`: 启动项目（行为可在偏好设置中配置）
 - `Cmd + R`: 刷新项目列表
+- `Cmd + Shift + R`: 刷新模板
 - `Cmd + N`: 添加新目录（在项目目录设置中）
 - `Cmd + D`: 设为默认模板（在模板管理中）
-- `Enter`: 使用默认模板启动（如无默认则简单启动）
 
 ## 🔧 可用命令
 
-| 命令              | 描述                       |
-| ----------------- | -------------------------- |
-| **搜索项目**      | 搜索并启动你的开发项目     |
-| **项目目录设置**  | 管理项目目录，提供完整控制 |
-| **Warp 启动模板** | 创建和管理自定义启动模板   |
+| 命令                           | 描述                       |
+| ------------------------------ | -------------------------- |
+| **Search Projects**            | 搜索并启动你的开发项目     |
+| **Project Directory Settings** | 管理项目目录，提供完整控制 |
+| **Launch Templates**           | 创建和管理启动模板         |
 
 ## 🎨 模板自定义
 
 ### 创建自定义模板
 
-1. 打开 **"Warp 启动模板"**
-2. 点击 **"新建模板"**
+1. 打开 **"Launch Templates"**
+2. 点击 **"New Template"**
 3. 配置：
-   - **名称**: 模板标识符
-   - **描述**: 简要说明
-   - **分屏方向**: 竖向（默认）或横向
-   - **启动模式**: 分屏、多标签页或多窗口
+   - **启动类型**: 终端 或 编辑器
+   - **终端 / 编辑器**: 选择你的应用
+   - **分屏方向**: 左右 或 上下（Warp & Ghostty）
+   - **启动模式**: 分屏、多标签页 或 多窗口
    - **命令**: 添加多个命令，支持自定义工作目录
 
-### 示例：全栈模板
+### 示例：AI 开发工具
 
 ```yaml
-名称: 同时开启 Claude Code , Gemini Cli, Codex 和 Cursor
-描述: 同时开启 Claude Code , Gemini Cli, Codex 和 Cursor
-分屏方向: 横向
+名称: AI Development Tools
+描述: 同时启动 Claude Code、Gemini CLI、Codex 和 Cursor
+终端: Warp
+分屏方向: 左右
+启动模式: 分屏
 命令:
   - 标题: Claude Code
     命令: claude
-    工作目录: (项目根目录)
-  - 标题: Gemini Cli
+  - 标题: Gemini CLI
     命令: gemini
-    工作目录: (项目根目录)
   - 标题: Codex
     命令: codex
-    工作目录: (项目根目录)
   - 标题: Cursor
     命令: cursor .
-    工作目录: (项目根目录)
 ```
 
-![custom-template](./metadata/code-runway-3.png)
+![custom-template](metadata/code-runway-3.png)
 
-## 🛠️ Warp 集成
+## 🖥️ 终端支持
 
-扩展利用 Warp 的启动配置系统：
+| 功能             | Warp | Ghostty | iTerm |
+| ---------------- | ---- | ------- | ----- |
+| 分屏             | ✅   | ✅      | ❌    |
+| 多标签页         | ✅   | ✅      | ❌    |
+| 多窗口           | ✅   | ✅      | ❌    |
+| 自定义分屏方向   | ✅   | ✅      | ❌    |
+| 单独命令         | ✅   | ✅      | ✅    |
+| 工作目录         | ✅   | ✅      | ✅    |
 
-- 在 `~/.warp/launch_configurations/` 创建 YAML 配置文件
-- 支持多种启动模式（分屏、标签页、窗口）
-- 自动设置正确的工作目录
-- 处理项目内的相对路径
+详细终端集成信息请查看 [Terminal Support](https://github.com/gongchunru/raycast-code-runway/blob/main/TERMINAL_SUPPORT.md)。

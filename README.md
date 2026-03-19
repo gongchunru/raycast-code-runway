@@ -2,22 +2,26 @@
 
 A powerful Raycast extension for quickly searching and launching development projects in terminals and editors.
 
-[Chinese Docs](./README_CN.md) | [English](./README.md)
+[中文文档](https://github.com/gongchunru/raycast-code-runway/blob/main/README_CN.md) | [English](https://github.com/gongchunru/raycast-code-runway/blob/main/README.md)
 
 ## ✨ Features
 
 - 🔍 **Smart Project Discovery**: Automatically scans and indexes projects in configured directories
-- 🚀 **Quick Launch**: One-click project startup with customizable terminal and editor templates
-- 🎯 **Project Templates**: Pre-defined launch templates for different development scenarios
+- 🚀 **Quick Launch**: One-click project startup with customizable templates
+- 🖥️ **Multi-Terminal Support**: Works with **Warp**, **Ghostty**, and **iTerm**
+- ✏️ **Editor Integration**: Launch projects directly in **Cursor**, **Windsurf**, **VS Code**, and more
+- 🎯 **Launch Templates**: Pre-defined templates for different development scenarios
 - ⭐ **Default Template**: Set your preferred template as default for ultra-fast startup
+- ⚙️ **Configurable Enter Key**: Choose whether Enter launches the default template or shows template picker
 - 🛠️ **Custom Commands**: Configure multiple terminal commands with custom working directories
 - 📁 **Directory Management**: Easy project directory management with enable/disable controls
-- 🎨 **Smart Icons**: Automatically assigns appropriate icons based on project type
 
 ## 📋 Requirements
 
-- [Raycast](https://raycast.com/) - Required
-- A supported terminal or editor for launch functionality
+- [Raycast](https://raycast.com/) — Required
+- A supported terminal or editor:
+  - **Terminals**: [Warp](https://www.warp.dev/), [Ghostty](https://ghostty.org/), [iTerm](https://iterm2.com/)
+  - **Editors**: [Cursor](https://cursor.sh/), [Windsurf](https://codeium.com/windsurf), [VS Code](https://code.visualstudio.com/), and others
 
 ## 🚀 Quick Start
 
@@ -36,12 +40,11 @@ The extension will automatically scan these directories for projects.
 
 1. Open Raycast and search for **"Search Projects"**
 2. Type to search for your projects
-3. Select a project and choose launch method:
-   - **Default Template**: Quick launch with your preferred template (if set)
-   - **Simple Launch**: Open in a single Warp window
-   - **Template Launch**: Choose from available templates
+3. Press `Enter` to launch:
+   - By default, launches with the **default template** instantly
+   - Or configure Enter to open the **template picker** in extension preferences
 
-![search-projects](./metadata/code-runway-2.png)
+![search-projects](metadata/code-runway-2.png)
 
 ### 3. Manage Templates
 
@@ -49,9 +52,11 @@ Create and customize launch templates:
 
 1. Search for **"Launch Templates"**
 2. Create new templates or edit existing ones
-3. Set a template as default using the **"Set as Default"** action (`Cmd + D`)
+3. Choose your terminal (Warp, Ghostty, iTerm) or editor (Cursor, Windsurf, etc.)
+4. Configure split direction, launch mode, and commands
+5. Set a template as default using the **"Set as Default"** action (`Cmd + D`)
 
-![manage-templates](./metadata/code-runway-4.png)
+![manage-templates](metadata/code-runway-4.png)
 
 ## 🔍 Project Detection
 
@@ -70,10 +75,11 @@ Projects are automatically detected by the presence of these files:
 
 ## ⌨️ Keyboard Shortcuts
 
+- `Enter`: Launch project (behavior configurable in preferences)
 - `Cmd + R`: Refresh project list
+- `Cmd + Shift + R`: Refresh templates
 - `Cmd + N`: Add new directory (in Project Directory Settings)
 - `Cmd + D`: Set template as default (in Template Management)
-- `Enter`: Launch with default template (or simple launch if no default)
 
 ## 🔧 Available Commands
 
@@ -90,40 +96,42 @@ Projects are automatically detected by the presence of these files:
 1. Open **"Launch Templates"**
 2. Click **"New Template"**
 3. Configure:
-   - **Name**: Template identifier
-   - **Description**: Brief description
-   - **Split Direction**: Vertical (default) or horizontal
+   - **Launcher Type**: Terminal or Editor
+   - **Terminal / Editor**: Choose your preferred app
+   - **Split Direction**: Left / Right or Top / Bottom (Warp & Ghostty)
    - **Launch Mode**: Split panes, multi-tab, or multi-window
    - **Commands**: Add multiple commands with custom working directories
 
-### Example: AI Tools Template
+### Example: AI Development Tools
 
 ```yaml
 Name: AI Development Tools
 Description: Launch Claude Code, Gemini CLI, Codex and Cursor simultaneously
-Split Direction: Horizontal
+Terminal: Warp
+Split Direction: Left / Right
+Launch Mode: Split Panes
 Commands:
   - Title: Claude Code
     Command: claude
-    Working Directory: (project root)
   - Title: Gemini CLI
     Command: gemini
-    Working Directory: (project root)
   - Title: Codex
     Command: codex
-    Working Directory: (project root)
   - Title: Cursor
     Command: cursor .
-    Working Directory: (project root)
 ```
 
-![custom-template](./metadata/code-runway-3.png)
+![custom-template](metadata/code-runway-3.png)
 
-## 🛠️ Warp Integration
+## 🖥️ Terminal Support
 
-The extension leverages Warp's Launch Configuration system:
+| Feature              | Warp | Ghostty | iTerm |
+| -------------------- | ---- | ------- | ----- |
+| Split panes          | ✅   | ✅      | ❌    |
+| Multiple tabs        | ✅   | ✅      | ❌    |
+| Multiple windows     | ✅   | ✅      | ❌    |
+| Custom split direction | ✅ | ✅      | ❌    |
+| Per-pane commands    | ✅   | ✅      | ✅    |
+| Working directory    | ✅   | ✅      | ✅    |
 
-- Creates YAML configuration files in `~/.warp/launch_configurations/`
-- Supports multiple launch modes (split panes, tabs, windows)
-- Automatically sets correct working directories
-- Handles relative paths within projects
+For detailed terminal integration information, see [Terminal Support](https://github.com/gongchunru/raycast-code-runway/blob/main/TERMINAL_SUPPORT.md).
