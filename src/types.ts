@@ -5,13 +5,21 @@ export interface Project {
   templateId?: string;
 }
 
+export type LauncherKind = "terminal" | "editor";
+export type TerminalType = "warp" | "ghostty" | "iterm";
+export type EditorType = string;
+
 export interface WarpTemplate {
   id: string;
   name: string;
   description: string;
+  launcherKind: LauncherKind; // Whether the template launches a terminal or an editor.
+  terminalType?: TerminalType; // Target terminal application.
+  editorType?: EditorType; // Target editor application.
   commands: TerminalCommand[];
-  splitDirection: "horizontal" | "vertical";
-  launchMode: "split-panes" | "multi-tab" | "multi-window";
+  splitDirection: "horizontal" | "vertical"; // Currently used by Warp and Ghostty layouts.
+  launchMode: "split-panes" | "multi-tab" | "multi-window"; // Controls how new surfaces are created.
+  ghosttyAutoRun?: boolean; // Whether Ghostty should auto-run commands via AppleScript.
   isDefault?: boolean;
 }
 

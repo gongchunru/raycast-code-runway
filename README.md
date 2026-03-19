@@ -1,13 +1,13 @@
 # Code Runway
 
-A powerful Raycast extension for quickly searching and launching development projects with multiple coding CLI tools in Warp (Vibe Coding).
+A powerful Raycast extension for quickly searching and launching development projects in terminals and editors.
 
-[中文文档](./README_CN.md) | [English](./README.md)
+[Chinese Docs](./README_CN.md) | [English](./README.md)
 
 ## ✨ Features
 
 - 🔍 **Smart Project Discovery**: Automatically scans and indexes projects in configured directories
-- 🚀 **Quick Launch**: One-click project startup with customizable Warp terminal configurations
+- 🚀 **Quick Launch**: One-click project startup with customizable terminal and editor templates
 - 🎯 **Project Templates**: Pre-defined launch templates for different development scenarios
 - ⭐ **Default Template**: Set your preferred template as default for ultra-fast startup
 - 🛠️ **Custom Commands**: Configure multiple terminal commands with custom working directories
@@ -17,7 +17,7 @@ A powerful Raycast extension for quickly searching and launching development pro
 ## 📋 Requirements
 
 - [Raycast](https://raycast.com/) - Required
-- [Warp Terminal](https://www.warp.dev/) - Required for terminal launch functionality
+- A supported terminal or editor for launch functionality
 
 ## 🚀 Quick Start
 
@@ -47,7 +47,7 @@ The extension will automatically scan these directories for projects.
 
 Create and customize launch templates:
 
-1. Search for **"Warp Launch Templates"**
+1. Search for **"Launch Templates"**
 2. Create new templates or edit existing ones
 3. Set a template as default using the **"Set as Default"** action (`Cmd + D`)
 
@@ -77,17 +77,17 @@ Projects are automatically detected by the presence of these files:
 
 ## 🔧 Available Commands
 
-| Command                        | Description                                   |
-| ------------------------------ | --------------------------------------------- |
-| **Search Projects**            | Search and launch your development projects   |
-| **Project Directory Settings** | Manage project directories with full controls |
-| **Warp Launch Templates**      | Create and manage custom launch templates     |
+| Command                        | Description                                     |
+| ------------------------------ | ----------------------------------------------- |
+| **Search Projects**            | Search and launch your development projects     |
+| **Project Directory Settings** | Manage project directories with full controls   |
+| **Launch Templates**           | Create and manage terminal and editor templates |
 
 ## 🎨 Template Customization
 
 ### Creating Custom Templates
 
-1. Open **"Warp Launch Templates"**
+1. Open **"Launch Templates"**
 2. Click **"New Template"**
 3. Configure:
    - **Name**: Template identifier
