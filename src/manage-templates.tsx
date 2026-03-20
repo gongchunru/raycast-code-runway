@@ -19,17 +19,26 @@ import { getAvailableEditors, getEditorDisplayName, getEditorIcon } from "./util
 import { getTerminalDisplayName, getTerminalIcon } from "./utils/terminalIcons";
 
 function getTemplateTargetLabel(template: WarpTemplate): string {
-  return template.launcherKind === "editor"
-    ? getEditorDisplayName(template.editorType)
-    : getTerminalDisplayName(template.terminalType);
+  if (template.launcherKind === "editor") return getEditorDisplayName(template.editorType);
+  if (template.launcherKind === "script") return "Script";
+  return getTerminalDisplayName(template.terminalType);
 }
 
 function getTemplateIcon(template: WarpTemplate): string | Icon | { fileIcon: string } {
-  if (template.isDefault) return Icon.Star;
   if (template.launcherKind === "editor") return getEditorIcon(template.editorType);
   if (template.launcherKind === "terminal") return getTerminalIcon(template.terminalType);
 
-  return Icon.Terminal;
+  return Icon.Code;
+}
+
+function getTemplateTypeLabel(template: WarpTemplate): string {
+  if (template.launcherKind === "editor") return "Editor";
+  if (template.launcherKind === "script") return "Script";
+  return "Terminal";
+}
+
+function getTemplateTitle(template: WarpTemplate): string {
+  return `${template.isDefault ? "★ " : ""}${template.name}`;
 }
 
 export default function ManageTemplates() {
@@ -48,6 +57,9 @@ export default function ManageTemplates() {
       },
     },
   );
+  const orderedTemplates = templates
+    .filter((template) => template.isDefault)
+    .concat(templates.filter((template) => !template.isDefault));
 
   async function deleteTemplate(id: string) {
     try {
@@ -118,24 +130,20 @@ export default function ManageTemplates() {
         </ActionPanel>
       }
     >
-      {templates.map((template) => (
+      {orderedTemplates.map((template) => (
         <List.Item
           key={template.id}
-          title={template.name}
+          title={getTemplateTitle(template)}
           subtitle={template.description}
-          icon={template.isDefault ? { source: Icon.Star, tintColor: Color.Yellow } : getTemplateIcon(template)}
+          icon={getTemplateIcon(template)}
           accessories={[
-            ...(template.isDefault ? [{ text: "Default", icon: Icon.Star, tooltip: "Default Template" }] : []),
+            ...(template.isDefault
+              ? [{ icon: { source: Icon.Star, tintColor: Color.Yellow }, tooltip: "Default Template" }]
+              : []),
             {
               text: getTemplateTargetLabel(template),
-              icon:
-                template.launcherKind === "editor"
-                  ? getEditorIcon(template.editorType)
-                  : getTerminalIcon(template.terminalType),
-              tooltip:
-                template.launcherKind === "editor"
-                  ? `Editor: ${getTemplateTargetLabel(template)}`
-                  : `Terminal: ${getTemplateTargetLabel(template)}`,
+              icon: getTemplateIcon(template),
+              tooltip: `${getTemplateTypeLabel(template)}: ${getTemplateTargetLabel(template)}`,
             },
             ...(template.launcherKind === "terminal"
               ? [
@@ -234,29 +242,40 @@ function EditTemplateForm({ template, onSaved }: EditTemplateFormProps) {
   );
   const [isDefault, setIsDefault] = useState(template?.isDefault || false);
   const [ghosttyAutoRun, setGhosttyAutoRun] = useState(template?.ghosttyAutoRun ?? false);
+  const [scriptContent, setScriptContent] = useState(template?.scriptContent ?? "");
   const [commands, setCommands] = useState<TerminalCommand[]>(
     template?.commands.length ? template.commands : [{ id: "1", title: "", command: "", workingDirectory: "" }],
   );
 
   const isTerminalLauncher = launcherKind === "terminal";
   const isEditorLauncher = launcherKind === "editor";
+  const isScriptLauncher = launcherKind === "script";
   const isWarp = terminalType === "warp";
   const isGhostty = terminalType === "ghostty";
+  const isCmux = terminalType === "cmux";
   const availableEditors = getAvailableEditors(editorType);
-  const launchModeOptions = isGhostty
+  const launchModeOptions = isCmux
     ? [
-        { value: "split-panes", title: "Current Tab", icon: "split-left-right.svg" },
-        { value: "multi-tab", title: "New Tab", icon: "launch-multi-tab.svg" },
-        { value: "multi-window", title: "New Window", icon: "launch-multi-window.svg" },
-      ]
-    : [
         { value: "split-panes", title: "Split Panes", icon: "split-left-right.svg" },
         { value: "multi-tab", title: "Multiple Tabs", icon: "launch-multi-tab.svg" },
-        { value: "multi-window", title: "Multiple Windows", icon: "launch-multi-window.svg" },
-      ];
+        { value: "multi-window", title: "Multiple Workspaces", icon: "launch-multi-window.svg" },
+      ]
+    : isGhostty
+      ? [
+          { value: "split-panes", title: "Current Tab", icon: "split-left-right.svg" },
+          { value: "multi-tab", title: "New Tab", icon: "launch-multi-tab.svg" },
+          { value: "multi-window", title: "New Window", icon: "launch-multi-window.svg" },
+        ]
+      : [
+          { value: "split-panes", title: "Split Panes", icon: "split-left-right.svg" },
+          { value: "multi-tab", title: "Multiple Tabs", icon: "launch-multi-tab.svg" },
+          { value: "multi-window", title: "Multiple Windows", icon: "launch-multi-window.svg" },
+        ];
   const launchModeInfo = isWarp
     ? "Warp supports panes, tabs, and windows natively"
-    : "Ghostty uses native AppleScript to create layouts in the current tab, a new tab, or a new window";
+    : isCmux
+      ? "cmux uses its CLI to create splits, panes (tabs), and workspaces (windows)"
+      : "Ghostty uses native AppleScript to create layouts in the current tab, a new tab, or a new window";
 
   function addCommand() {
     const newCommand: TerminalCommand = {
@@ -291,13 +310,24 @@ function EditTemplateForm({ template, onSaved }: EditTemplateFormProps) {
     }
 
     const isGhosttyTerminal = isTerminalLauncher && terminalType === "ghostty";
-    const validCommands = commands.filter((cmd) => cmd.title.trim() && (isGhosttyTerminal || cmd.command.trim()));
+    const isCmuxTerminal = isTerminalLauncher && terminalType === "cmux";
+    const validCommands = commands.filter(
+      (cmd) => cmd.title.trim() && (isGhosttyTerminal || isCmuxTerminal || cmd.command.trim()),
+    );
 
     if (isTerminalLauncher && validCommands.length === 0) {
       showToast({
         style: Toast.Style.Failure,
         title: "At least one valid command is required",
         message: `Total ${commands.length} commands, ${validCommands.length} are valid.`,
+      });
+      return;
+    }
+
+    if (isScriptLauncher && !scriptContent.trim()) {
+      showToast({
+        style: Toast.Style.Failure,
+        title: "Script content cannot be empty",
       });
       return;
     }
@@ -310,6 +340,7 @@ function EditTemplateForm({ template, onSaved }: EditTemplateFormProps) {
         launcherKind,
         terminalType: isTerminalLauncher ? terminalType : undefined,
         editorType: isEditorLauncher ? editorType : undefined,
+        scriptContent: isScriptLauncher ? scriptContent.trim() : undefined,
         splitDirection,
         launchMode,
         ghosttyAutoRun: isGhostty ? ghosttyAutoRun : false,
@@ -331,6 +362,7 @@ function EditTemplateForm({ template, onSaved }: EditTemplateFormProps) {
         console.log("Launcher Kind:", newTemplate.launcherKind);
         console.log("Terminal Type:", newTemplate.terminalType);
         console.log("Editor Type:", newTemplate.editorType);
+        console.log("Has Script Content:", Boolean(newTemplate.scriptContent));
         console.log("Is Default:", newTemplate.isDefault);
       }
 
@@ -342,7 +374,9 @@ function EditTemplateForm({ template, onSaved }: EditTemplateFormProps) {
         message:
           newTemplate.launcherKind === "terminal"
             ? `Contains ${validCommands.length} commands.`
-            : `Opens in ${getEditorDisplayName(editorType)}.`,
+            : newTemplate.launcherKind === "editor"
+              ? `Opens in ${getEditorDisplayName(editorType)}.`
+              : "Runs the custom script.",
       });
 
       onSaved();
@@ -406,10 +440,11 @@ function EditTemplateForm({ template, onSaved }: EditTemplateFormProps) {
         title="Launcher Type"
         value={launcherKind}
         onChange={(value) => setLauncherKind(value as LauncherKind)}
-        info="Choose whether this template opens a terminal layout or an editor"
+        info="Choose whether this template opens a terminal layout, an editor, or runs a custom script"
       >
         <Form.Dropdown.Item value="terminal" title="Terminal" icon={Icon.Terminal} />
         <Form.Dropdown.Item value="editor" title="Editor" icon={Icon.CodeBlock} />
+        <Form.Dropdown.Item value="script" title="Script" icon={Icon.Code} />
       </Form.Dropdown>
 
       {isTerminalLauncher && (
@@ -423,6 +458,7 @@ function EditTemplateForm({ template, onSaved }: EditTemplateFormProps) {
           <Form.Dropdown.Item value="warp" title="Warp" icon={getTerminalIcon("warp")} />
           <Form.Dropdown.Item value="ghostty" title="Ghostty" icon={getTerminalIcon("ghostty")} />
           <Form.Dropdown.Item value="iterm" title="iTerm" icon={getTerminalIcon("iterm")} />
+          <Form.Dropdown.Item value="cmux" title="cmux" icon={getTerminalIcon("cmux")} />
         </Form.Dropdown>
       )}
 
@@ -445,14 +481,20 @@ function EditTemplateForm({ template, onSaved }: EditTemplateFormProps) {
         </Form.Dropdown>
       )}
 
-      {isTerminalLauncher && (isWarp || isGhostty) && (
+      {isTerminalLauncher && (isWarp || isGhostty || isCmux) && (
         <>
           <Form.Dropdown
             id="splitDirection"
             title="Split Direction"
             value={splitDirection}
             onChange={(value) => setSplitDirection(value as "horizontal" | "vertical")}
-            info={isWarp ? "Only used by Warp" : "Ghostty creates splits through native AppleScript"}
+            info={
+              isWarp
+                ? "Only used by Warp"
+                : isCmux
+                  ? "cmux creates splits via CLI"
+                  : "Ghostty creates splits through native AppleScript"
+            }
           >
             <Form.Dropdown.Item value="vertical" title="Left / Right" icon="split-left-right.svg" />
             <Form.Dropdown.Item value="horizontal" title="Top / Bottom" icon="split-top-bottom.svg" />
@@ -489,6 +531,13 @@ function EditTemplateForm({ template, onSaved }: EditTemplateFormProps) {
         />
       )}
 
+      {isCmux && (
+        <Form.Description
+          title="cmux Notes"
+          text="cmux uses its CLI to create workspaces, splits, and panes. Commands are sent via 'cmux send' and executed automatically."
+        />
+      )}
+
       {isTerminalLauncher && terminalType === "iterm" && (
         <Form.Description
           title="iTerm Notes"
@@ -507,11 +556,22 @@ function EditTemplateForm({ template, onSaved }: EditTemplateFormProps) {
         />
       )}
 
+      {isScriptLauncher && (
+        <Form.Description
+          title="Script Notes"
+          text="Script templates run a Bash snippet with the project root as the working directory. Use $1 for the project path, or CODE_RUNWAY_PROJECT_PATH and CODE_RUNWAY_PROJECT_NAME environment variables."
+        />
+      )}
+
       <Form.Checkbox
         id="isDefault"
         title="Set as Default"
         label={`Use this as the default ${
-          isEditorLauncher ? getEditorDisplayName(editorType) : getTerminalDisplayName(terminalType)
+          isEditorLauncher
+            ? getEditorDisplayName(editorType)
+            : isScriptLauncher
+              ? "script"
+              : getTerminalDisplayName(terminalType)
         } launch template`}
         value={isDefault}
         onChange={setIsDefault}
@@ -527,7 +587,9 @@ function EditTemplateForm({ template, onSaved }: EditTemplateFormProps) {
                 ? "Configure terminal commands. At least one command is required."
                 : terminalType === "ghostty"
                   ? "Configure commands. Ghostty will create panes in the current tab, a new tab, or a new window and open the working directory. Auto-run depends on the setting above."
-                  : "Configure terminal commands. iTerm will run them in the selected working directory."
+                  : terminalType === "cmux"
+                    ? "Configure commands. cmux will create splits, panes, or workspaces and run the commands automatically."
+                    : "Configure terminal commands. iTerm will run them in the selected working directory."
             }
           />
 
@@ -573,6 +635,20 @@ function EditTemplateForm({ template, onSaved }: EditTemplateFormProps) {
           <Form.Description text="Tip: The working directory is a path relative to the project root. Leave it blank to use the project root." />
         </>
       )}
+
+      {isScriptLauncher && (
+        <>
+          <Form.Separator />
+          <Form.TextArea
+            id="scriptContent"
+            title="Script"
+            placeholder={'cursor "$1"\nopen -a Terminal "$1"'}
+            value={scriptContent}
+            onChange={setScriptContent}
+            info="Executed by Bash with the project root as cwd. $1 is the project path."
+          />
+        </>
+      )}
     </Form>
   );
 }
@@ -584,9 +660,11 @@ interface TemplateDetailsProps {
 function TemplateDetails({ template }: TemplateDetailsProps) {
   const isTerminalLauncher = template.launcherKind === "terminal";
   const isEditorLauncher = template.launcherKind === "editor";
+  const isScriptLauncher = template.launcherKind === "script";
   const isWarp = template.terminalType === "warp";
   const isGhostty = template.terminalType === "ghostty";
-  const showSplitSettings = isTerminalLauncher && (isWarp || isGhostty);
+  const isCmux = template.terminalType === "cmux";
+  const showSplitSettings = isTerminalLauncher && (isWarp || isGhostty || isCmux);
   const launchModeLabel = isGhostty
     ? template.launchMode === "split-panes"
       ? "Current Tab"
@@ -606,22 +684,26 @@ function TemplateDetails({ template }: TemplateDetailsProps) {
         : Icon.Window;
 
   return (
-    <List navigationTitle={`Template Details - ${template.name}`}>
+    <List navigationTitle={`Template Details - ${getTemplateTitle(template)}`}>
       <List.Section title="Basic Information">
-        <List.Item title="Name" subtitle={template.name} icon={Icon.Tag} />
+        <List.Item title="Name" subtitle={getTemplateTitle(template)} icon={Icon.Tag} />
         <List.Item title="Description" subtitle={template.description} icon={Icon.Text} />
         <List.Item
           title="Launcher Type"
-          subtitle={isEditorLauncher ? "Editor" : "Terminal"}
-          icon={isEditorLauncher ? Icon.CodeBlock : Icon.Terminal}
+          subtitle={getTemplateTypeLabel(template)}
+          icon={isEditorLauncher ? Icon.CodeBlock : isScriptLauncher ? Icon.Code : Icon.Terminal}
         />
-        <List.Item
-          title={isEditorLauncher ? "Editor" : "Terminal"}
-          subtitle={
-            isEditorLauncher ? getEditorDisplayName(template.editorType) : getTerminalDisplayName(template.terminalType)
-          }
-          icon={isEditorLauncher ? getEditorIcon(template.editorType) : getTerminalIcon(template.terminalType)}
-        />
+        {!isScriptLauncher && (
+          <List.Item
+            title={isEditorLauncher ? "Editor" : "Terminal"}
+            subtitle={
+              isEditorLauncher
+                ? getEditorDisplayName(template.editorType)
+                : getTerminalDisplayName(template.terminalType)
+            }
+            icon={isEditorLauncher ? getEditorIcon(template.editorType) : getTerminalIcon(template.terminalType)}
+          />
+        )}
         {showSplitSettings && (
           <>
             <List.Item
@@ -635,7 +717,13 @@ function TemplateDetails({ template }: TemplateDetailsProps) {
         {template.isDefault && (
           <List.Item
             title="Default Template"
-            subtitle={`This is the default ${isEditorLauncher ? getEditorDisplayName(template.editorType) : getTerminalDisplayName(template.terminalType)} launch template`}
+            subtitle={`This is the default ${
+              isEditorLauncher
+                ? getEditorDisplayName(template.editorType)
+                : isScriptLauncher
+                  ? "script"
+                  : getTerminalDisplayName(template.terminalType)
+            } launch template`}
             icon={Icon.Star}
           />
         )}
@@ -648,6 +736,15 @@ function TemplateDetails({ template }: TemplateDetailsProps) {
             subtitle="The selected editor opens the project folder directly."
             icon={Icon.Folder}
           />
+        </List.Section>
+      ) : isScriptLauncher ? (
+        <List.Section title="Script">
+          <List.Item
+            title="Execution"
+            subtitle="Runs with the project root as cwd and passes the project path as $1."
+            icon={Icon.Play}
+          />
+          <List.Item title="Content" subtitle={template.scriptContent || "(empty)"} icon={Icon.Code} />
         </List.Section>
       ) : (
         <List.Section title={isWarp ? "Commands" : "Reference Commands"}>

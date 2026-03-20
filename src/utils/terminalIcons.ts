@@ -8,6 +8,7 @@ const TERMINAL_APPS: Record<TerminalType, { appName: string; fallbackIcon: Icon 
   ghostty: { appName: "Ghostty", fallbackIcon: Icon.CommandSymbol },
   iterm: { appName: "iTerm", fallbackIcon: Icon.Terminal },
   warp: { appName: "Warp", fallbackIcon: Icon.Terminal },
+  cmux: { appName: "cmux", fallbackIcon: Icon.Terminal },
 };
 
 function getTerminalBundlePath(terminalType?: TerminalType): string | null {

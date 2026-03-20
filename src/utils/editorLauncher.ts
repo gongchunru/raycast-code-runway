@@ -71,6 +71,13 @@ const EDITOR_CANDIDATES: EditorCandidate[] = [
     lobeAsset: join(environment.assetsPath, "editor-windsurf.svg"),
   },
   {
+    aliases: ["codex"],
+    family: "codex",
+    order: 45,
+    title: "Codex",
+    match: /^Codex$/,
+  },
+  {
     aliases: ["antigravity"],
     family: "antigravity",
     order: 50,

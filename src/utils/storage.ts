@@ -14,7 +14,7 @@ type StoredTemplate = Partial<WarpTemplate> & {
   name?: string;
 };
 
-const TERMINAL_TYPES: TerminalType[] = ["warp", "ghostty", "iterm"];
+const TERMINAL_TYPES: TerminalType[] = ["warp", "ghostty", "iterm", "cmux"];
 
 /**
  * Project Directory Management
@@ -72,19 +72,17 @@ export class ProjectTemplateStorage {
 
     const migratedTemplates = parsed
       .filter(
-        (
-          template,
-        ): template is StoredTemplate &
-          Pick<WarpTemplate, "id" | "name" | "description"> & { commands?: WarpTemplate["commands"] } =>
+        (template): template is StoredTemplate & Pick<WarpTemplate, "id" | "name" | "description"> =>
           typeof template.id === "string" &&
           typeof template.name === "string" &&
-          typeof template.description === "string" &&
-          Array.isArray(template.commands),
+          typeof template.description === "string",
       )
       .map((template) => {
-        const launcherKind = template.launcherKind === "editor" ? "editor" : "terminal";
+        const launcherKind =
+          template.launcherKind === "editor" ? "editor" : template.launcherKind === "script" ? "script" : "terminal";
         const isRecommendedEditorTemplate = launcherKind === "editor" && template.id.startsWith("recommended-editor:");
         const normalizedEditorType = launcherKind === "editor" ? template.editorType || "Cursor" : undefined;
+        const normalizedScriptContent = launcherKind === "script" ? template.scriptContent?.trim() || "" : undefined;
 
         const migrated: WarpTemplate = {
           ...template,
@@ -95,8 +93,9 @@ export class ProjectTemplateStorage {
               : launcherKind === "terminal"
                 ? "warp"
                 : undefined,
-          editorType: normalizedEditorType,
-          commands: launcherKind === "editor" ? [] : (template.commands ?? []),
+          editorType: launcherKind === "editor" ? normalizedEditorType : undefined,
+          scriptContent: normalizedScriptContent,
+          commands: launcherKind === "terminal" ? (Array.isArray(template.commands) ? template.commands : []) : [],
           splitDirection: template.splitDirection === "horizontal" ? "horizontal" : "vertical",
           launchMode:
             template.launchMode === "split-panes" ||
@@ -113,9 +112,13 @@ export class ProjectTemplateStorage {
         };
 
         if (
+          migrated.launcherKind !== template.launcherKind ||
           migrated.name !== template.name ||
           migrated.description !== template.description ||
-          migrated.editorType !== template.editorType
+          migrated.editorType !== template.editorType ||
+          migrated.scriptContent !== template.scriptContent ||
+          (launcherKind === "terminal" && !Array.isArray(template.commands)) ||
+          (launcherKind !== "terminal" && Array.isArray(template.commands) && template.commands.length > 0)
         ) {
           changed = true;
         }
@@ -160,22 +163,15 @@ export class ProjectTemplateStorage {
   }
 
   private static async maybeAutoSyncRecommendedEditorTemplates(templates: WarpTemplate[]): Promise<WarpTemplate[]> {
-    const alreadySynced = await LocalStorage.getItem<string>(STORAGE_KEYS.RECOMMENDED_EDITOR_TEMPLATES_SYNCED);
-    if (alreadySynced === "true") {
+    const recommendedTemplates = this.buildRecommendedEditorTemplates(templates);
+
+    if (recommendedTemplates.length === 0) {
       return templates;
     }
 
-    const recommendedTemplates = this.buildRecommendedEditorTemplates(templates);
     const mergedTemplates = [...templates, ...recommendedTemplates];
-
-    await LocalStorage.setItem(STORAGE_KEYS.RECOMMENDED_EDITOR_TEMPLATES_SYNCED, "true");
-
-    if (recommendedTemplates.length > 0) {
-      await this.saveTemplates(mergedTemplates);
-      return mergedTemplates;
-    }
-
-    return templates;
+    await this.saveTemplates(mergedTemplates);
+    return mergedTemplates;
   }
 
   static async getTemplates(): Promise<WarpTemplate[]> {
@@ -222,6 +218,7 @@ export class ProjectTemplateStorage {
         launcherKind: template.launcherKind,
         terminalType: template.terminalType, // Include terminal type in debug output.
         editorType: template.editorType,
+        hasScriptContent: Boolean(template.scriptContent?.trim()),
         splitDirection: template.splitDirection,
         isDefault: template.isDefault,
       });
@@ -244,6 +241,8 @@ export class ProjectTemplateStorage {
         console.log("New terminalType:", template.terminalType);
         console.log("Old editorType:", templates[existingIndex].editorType);
         console.log("New editorType:", template.editorType);
+        console.log("Old hasScriptContent:", Boolean(templates[existingIndex].scriptContent?.trim()));
+        console.log("New hasScriptContent:", Boolean(template.scriptContent?.trim()));
       }
       templates[existingIndex] = template;
     } else {
@@ -254,7 +253,7 @@ export class ProjectTemplateStorage {
     if (DEBUG) {
       console.log("About to save templates. Total:", templates.length);
       templates.forEach((t, i) => {
-        console.log(`  Template ${i}: ${t.name} - ${t.launcherKind} - ${t.terminalType ?? t.editorType}`);
+        console.log(`  Template ${i}: ${t.name} - ${t.launcherKind} - ${t.terminalType ?? t.editorType ?? "script"}`);
       });
     }
 

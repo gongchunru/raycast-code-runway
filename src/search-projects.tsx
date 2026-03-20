@@ -1,4 +1,4 @@
-import { ActionPanel, Action, List, showToast, Toast, Icon, showHUD, environment, getPreferenceValues } from "@raycast/api";
+import { ActionPanel, Action, List, showToast, Toast, Icon, showHUD, environment } from "@raycast/api";
 import { useState, useEffect } from "react";
 import { useCachedPromise } from "@raycast/utils";
 import { Project, WarpTemplate } from "./types";
@@ -17,7 +17,9 @@ import {
   checkItermInstalled,
   debugItermEnvironment,
 } from "./utils/itermLauncher";
+import { launchCmuxProject, launchCmuxSimple, checkCmuxInstalled, debugCmuxEnvironment } from "./utils/cmuxLauncher";
 import { checkEditorInstalled, getEditorDisplayName, getEditorIcon, launchEditorProject } from "./utils/editorLauncher";
+import { launchScriptProject } from "./utils/scriptLauncher";
 import { getTerminalDisplayName, getTerminalIcon } from "./utils/terminalIcons";
 import { debugStorage } from "./debug-storage";
 import { debugTemplates, fixGhosttyTemplate } from "./debug-templates";
@@ -25,6 +27,24 @@ import { templateEvents } from "./utils/templateEvents";
 
 const LAUNCH_DEDUP_MS = 1200;
 let lastLaunch: { projectPath: string; at: number } | null = null;
+
+function getTemplateTargetLabel(template: WarpTemplate): string {
+  if (template.launcherKind === "editor") return getEditorDisplayName(template.editorType);
+  if (template.launcherKind === "script") return "Script";
+  return getTerminalDisplayName(template.terminalType);
+}
+
+function getTemplateActionTitle(template: WarpTemplate): string {
+  const prefix = template.isDefault ? "★ " : "";
+  const suffix = template.isDefault ? " (Default)" : "";
+  return `${prefix}${template.name}${suffix} [${getTemplateTargetLabel(template)}]`;
+}
+
+function getTemplateIcon(template: WarpTemplate): string | Icon | { fileIcon: string } {
+  if (template.launcherKind === "editor") return getEditorIcon(template.editorType);
+  if (template.launcherKind === "script") return Icon.Code;
+  return getTerminalIcon(template.terminalType);
+}
 
 export default function SearchProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -34,6 +54,7 @@ export default function SearchProjects() {
   const [warpInstalled, setWarpInstalled] = useState(false);
   const [ghosttyInstalled, setGhosttyInstalled] = useState(false);
   const [itermInstalled, setItermInstalled] = useState(false);
+  const [cmuxInstalled, setCmuxInstalled] = useState(false);
 
   // Use a timestamp or version key that can be updated to force cache invalidation
   const [templateCacheKey, setTemplateCacheKey] = useState(() => Date.now().toString());
@@ -61,6 +82,9 @@ export default function SearchProjects() {
 
   // Derive default template from the templates data
   const defaultTemplate = warpTemplates.find((t) => t.isDefault) || null;
+  const orderedTemplates = defaultTemplate
+    ? [defaultTemplate, ...warpTemplates.filter((template) => template.id !== defaultTemplate.id)]
+    : warpTemplates;
 
   // Debug: Log templates when they change
   useEffect(() => {
@@ -104,11 +128,14 @@ export default function SearchProjects() {
       const itermCheck = await checkItermInstalled();
       setItermInstalled(itermCheck);
 
-      if (!warpCheck && !ghosttyCheck && !itermCheck) {
+      const cmuxCheck = await checkCmuxInstalled();
+      setCmuxInstalled(cmuxCheck);
+
+      if (!warpCheck && !ghosttyCheck && !itermCheck && !cmuxCheck) {
         showToast({
           style: Toast.Style.Failure,
           title: "No Terminal Installed",
-          message: "Install Warp, Ghostty, or iTerm to use launch actions.",
+          message: "Install Warp, Ghostty, iTerm, or cmux to use launch actions.",
         });
       }
 
@@ -155,6 +182,7 @@ export default function SearchProjects() {
       console.log("Launcher Kind:", template.launcherKind);
       console.log("Terminal Type:", template.terminalType);
       console.log("Editor Type:", template.editorType);
+      console.log("Has Script Content:", Boolean(template.scriptContent?.trim()));
       console.log("Warp Installed:", warpInstalled);
       console.log("Ghostty Installed:", ghosttyInstalled);
       console.log("iTerm Installed:", itermInstalled);
@@ -170,6 +198,15 @@ export default function SearchProjects() {
             style: Toast.Style.Failure,
             title: `${getEditorDisplayName(template.editorType)} Not Installed`,
             message: `Install ${getEditorDisplayName(template.editorType)} to use this template.`,
+          });
+          return;
+        }
+      } else if (template.launcherKind === "script") {
+        if (!template.scriptContent?.trim()) {
+          showToast({
+            style: Toast.Style.Failure,
+            title: "Script Template Is Empty",
+            message: "Add a script before using this template.",
           });
           return;
         }
@@ -204,14 +241,22 @@ export default function SearchProjects() {
           });
           return;
         }
+        if (terminalType === "cmux" && !cmuxInstalled) {
+          showToast({
+            style: Toast.Style.Failure,
+            title: "cmux Not Installed",
+            message: "Install cmux to use this template.",
+          });
+          return;
+        }
       }
     } else {
       // Without a template, prefer Warp, then iTerm, then Ghostty.
-      if (!warpInstalled && !ghosttyInstalled && !itermInstalled) {
+      if (!warpInstalled && !ghosttyInstalled && !itermInstalled && !cmuxInstalled) {
         showToast({
           style: Toast.Style.Failure,
           title: "No Terminal Installed",
-          message: "Install Warp, Ghostty, or iTerm to launch projects.",
+          message: "Install Warp, Ghostty, iTerm, or cmux to launch projects.",
         });
         return;
       }
@@ -224,6 +269,9 @@ export default function SearchProjects() {
         if (template.launcherKind === "editor") {
           if (DEBUG) console.log("Launching with editor...");
           await launchEditorProject(project, template);
+        } else if (template.launcherKind === "script") {
+          if (DEBUG) console.log("Launching with script...");
+          await launchScriptProject(project, template);
         } else if (template.terminalType === "warp") {
           if (DEBUG) console.log("Launching with Warp...");
           await launchWarpConfig(project, template);
@@ -233,6 +281,9 @@ export default function SearchProjects() {
         } else if (template.terminalType === "iterm") {
           if (DEBUG) console.log("Launching with iTerm...");
           await launchItermProject(project, template);
+        } else if (template.terminalType === "cmux") {
+          if (DEBUG) console.log("Launching with cmux...");
+          await launchCmuxProject(project, template);
         }
         showHUD(`Launched ${project.name} (${template.name})`);
       } else {
@@ -241,6 +292,8 @@ export default function SearchProjects() {
           await launchProjectSimple(project);
         } else if (itermInstalled) {
           await launchItermSimple(project);
+        } else if (cmuxInstalled) {
+          await launchCmuxSimple(project);
         } else {
           await launchGhosttySimple(project);
         }
@@ -308,88 +361,18 @@ export default function SearchProjects() {
             ]}
             actions={
               <ActionPanel>
-                {getPreferenceValues<{ enterAction?: string }>().enterAction !== "choose-template" ? (
-                  <>
-                    <ActionPanel.Section title="Quick Launch">
-                      {defaultTemplate ? (
-                        <Action
-                          title={`Default Template (${defaultTemplate.name})`}
-                          icon={Icon.Star}
-                          onAction={() => launchProject(project, defaultTemplate)}
-                        />
-                      ) : (
-                        <Action title="Simple Launch" icon={Icon.Terminal} onAction={() => launchProject(project)} />
-                      )}
-                    </ActionPanel.Section>
-                    <ActionPanel.Section title="Launch">
-                      <Action.Push
-                        title="Choose Launch Action"
-                        icon={Icon.List}
-                        target={
-                          <LaunchOptionsView
-                            project={project}
-                            defaultTemplate={defaultTemplate}
-                            templates={warpTemplates}
-                            onLaunch={launchProject}
-                          />
-                        }
-                      />
-                    </ActionPanel.Section>
-                  </>
-                ) : (
-                  <>
-                    <ActionPanel.Section title="Launch">
-                      <Action.Push
-                        title="Choose Launch Action"
-                        icon={Icon.List}
-                        target={
-                          <LaunchOptionsView
-                            project={project}
-                            defaultTemplate={defaultTemplate}
-                            templates={warpTemplates}
-                            onLaunch={launchProject}
-                          />
-                        }
-                      />
-                    </ActionPanel.Section>
-                    <ActionPanel.Section title="Quick Launch">
-                      {defaultTemplate ? (
-                        <Action
-                          title={`Default Template (${defaultTemplate.name})`}
-                          icon={Icon.Star}
-                          onAction={() => launchProject(project, defaultTemplate)}
-                        />
-                      ) : (
-                        <Action title="Simple Launch" icon={Icon.Terminal} onAction={() => launchProject(project)} />
-                      )}
-                    </ActionPanel.Section>
-                  </>
-                )}
-
-                <ActionPanel.Section title="Templates">
-                  {warpTemplates.map((template) => (
+                {orderedTemplates.length > 0 ? (
+                  orderedTemplates.map((template) => (
                     <Action
                       key={template.id}
-                      title={`${template.name}${template.isDefault ? " (Default)" : ""} [${
-                        template.launcherKind === "editor"
-                          ? getEditorDisplayName(template.editorType)
-                          : template.terminalType === "warp"
-                            ? "Warp"
-                            : template.terminalType === "ghostty"
-                              ? "Ghostty"
-                              : "iTerm"
-                      }]`}
-                      icon={
-                        template.isDefault
-                          ? Icon.Star
-                          : template.launcherKind === "editor"
-                            ? getEditorIcon(template.editorType)
-                            : getTerminalIcon(template.terminalType)
-                      }
+                      title={getTemplateActionTitle(template)}
+                      icon={getTemplateIcon(template)}
                       onAction={() => launchProject(project, template)}
                     />
-                  ))}
-                </ActionPanel.Section>
+                  ))
+                ) : (
+                  <Action title="Simple Launch" icon={Icon.Terminal} onAction={() => launchProject(project)} />
+                )}
 
                 <ActionPanel.Section title="Management">
                   <Action.ShowInFinder title="Show in Finder" path={project.path} icon={Icon.Finder} />
@@ -609,81 +592,38 @@ export default function SearchProjects() {
                       }
                     }}
                   />
+                  <Action
+                    title="Diagnose Cmux Environment"
+                    icon={Icon.Bug}
+                    onAction={async () => {
+                      showToast({
+                        style: Toast.Style.Animated,
+                        title: "Running Diagnostics...",
+                        message: "Checking cmux environment configuration.",
+                      });
+
+                      try {
+                        await debugCmuxEnvironment();
+                        showToast({
+                          style: Toast.Style.Success,
+                          title: "Diagnostics Complete",
+                          message: "Check the console logs for details.",
+                        });
+                      } catch (error) {
+                        showToast({
+                          style: Toast.Style.Failure,
+                          title: "Diagnostics Failed",
+                          message: error instanceof Error ? error.message : "Unknown error",
+                        });
+                      }
+                    }}
+                  />
                 </ActionPanel.Section>
               </ActionPanel>
             }
           />
         ))
       )}
-    </List>
-  );
-}
-
-type LaunchOptionsViewProps = {
-  project: Project;
-  defaultTemplate: WarpTemplate | null;
-  templates: WarpTemplate[];
-  onLaunch: (project: Project, template?: WarpTemplate) => Promise<void>;
-};
-
-function LaunchOptionsView({ project, defaultTemplate, templates, onLaunch }: LaunchOptionsViewProps) {
-  const terminalLabel = (template: WarpTemplate) =>
-    template.launcherKind === "editor"
-      ? getEditorDisplayName(template.editorType)
-      : getTerminalDisplayName(template.terminalType);
-
-  const terminalIcon = (template: WarpTemplate) => {
-    if (template.isDefault) return Icon.Star;
-    if (template.launcherKind === "editor") return getEditorIcon(template.editorType);
-    return getTerminalIcon(template.terminalType);
-  };
-
-  return (
-    <List navigationTitle={`Launch ${project.name}`} searchBarPlaceholder={`Launch ${project.name}...`}>
-      <List.Section title="Quick Launch">
-        {defaultTemplate ? (
-          <List.Item
-            title={`Default Template (${defaultTemplate.name})`}
-            subtitle={defaultTemplate.description}
-            icon={Icon.Star}
-            actions={
-              <ActionPanel>
-                <Action title="Launch" icon={Icon.Play} onAction={() => onLaunch(project, defaultTemplate)} />
-              </ActionPanel>
-            }
-          />
-        ) : (
-          <List.Item
-            title="Simple Launch"
-            icon={Icon.Terminal}
-            actions={
-              <ActionPanel>
-                <Action title="Launch" icon={Icon.Play} onAction={() => onLaunch(project)} />
-              </ActionPanel>
-            }
-          />
-        )}
-      </List.Section>
-
-      <List.Section title="Templates">
-        {templates.map((template) => (
-          <List.Item
-            key={template.id}
-            title={`${template.name}${template.isDefault ? " (Default)" : ""}`}
-            subtitle={template.description}
-            icon={terminalIcon(template)}
-            accessories={[
-              { text: template.launcherKind === "editor" ? "Editor" : "Terminal" },
-              { text: terminalLabel(template) },
-            ]}
-            actions={
-              <ActionPanel>
-                <Action title="Launch" icon={Icon.Play} onAction={() => onLaunch(project, template)} />
-              </ActionPanel>
-            }
-          />
-        ))}
-      </List.Section>
     </List>
   );
 }
